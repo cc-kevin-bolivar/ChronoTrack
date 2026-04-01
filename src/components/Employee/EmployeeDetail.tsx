@@ -1,7 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useDataState } from '../../context/DataContext';
+import { useObservations } from '../../context/ObservationContext';
 import { useTheme } from '../../context/ThemeContext';
+import { normalizeDateKey } from '../../utils/excelExporter';
 
 interface Props {
   employeeId: string;
@@ -52,6 +54,7 @@ const PIE_COLORS = ['#10b981', '#ef4444']; // green, red
 
 export function EmployeeDetail({ employeeId, onBack }: Props) {
   const { parsedData } = useDataState();
+  const { getObservation, setObservation } = useObservations();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -136,6 +139,8 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
       tableColumns,
     };
   }, [parsedData, employeeId]);
+
+  const [modalInfo, setModalInfo] = useState<{ dateKey: string; dateLabel: string } | null>(null);
 
   if (!data) {
     return (
@@ -253,25 +258,67 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
                     {col}
                   </th>
                 ))}
+                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                  Observación
+                </th>
               </tr>
             </thead>
             <tbody>
-              {data.empRows.map((row, i) => (
-                <tr key={i} className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
-                  {data.tableColumns.map((col) => (
-                    <td
-                      key={col}
-                      className={`px-4 py-2.5 whitespace-nowrap ${getCellClass(row[col], col)}`}
-                    >
-                      {formatCell(row[col])}
+              {data.empRows.map((row, i) => {
+                const dateVal = parsedData?.attendanceKeys?.dateKey ? row[parsedData.attendanceKeys.dateKey] : null;
+                const dateStr = normalizeDateKey(dateVal) ?? String(i);
+                const dateLabel = dateVal instanceof Date ? dateVal.toLocaleDateString('es-ES') : String(dateVal ?? '');
+                const obs = getObservation(employeeId, dateStr);
+                return (
+                  <tr key={i} className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
+                    {data.tableColumns.map((col) => (
+                      <td
+                        key={col}
+                        className={`px-4 py-2.5 whitespace-nowrap ${getCellClass(row[col], col)}`}
+                      >
+                        {formatCell(row[col])}
+                      </td>
+                    ))}
+                    <td className="px-4 py-2.5">
+                      <button
+                        onClick={() => setModalInfo({ dateKey: dateStr, dateLabel })}
+                        className="group flex items-center gap-1.5 min-w-[140px] text-left"
+                        title={obs ? 'Editar observación' : 'Agregar observación'}
+                      >
+                        {obs ? (
+                          <span className="text-sm text-gray-700 dark:text-gray-300 truncate max-w-[200px]">{obs}</span>
+                        ) : (
+                          <span className="text-sm text-gray-400 dark:text-gray-500 italic">Agregar...</span>
+                        )}
+                        <svg
+                          className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                        </svg>
+                      </button>
                     </td>
-                  ))}
-                </tr>
-              ))}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Modal de observación */}
+      {modalInfo && (
+        <ObservationModal
+          employeeName={data.employeeName}
+          dateLabel={modalInfo.dateLabel}
+          value={getObservation(employeeId, modalInfo.dateKey)}
+          onSave={(text) => {
+            setObservation(employeeId, modalInfo.dateKey, text);
+            setModalInfo(null);
+          }}
+          onClose={() => setModalInfo(null)}
+        />
+      )}
     </div>
   );
 }
@@ -293,6 +340,98 @@ function InfoRow({ label, value, valueClass }: { label: string; value: string; v
     <div className="flex items-center justify-between py-2 border-b border-gray-50 dark:border-gray-700 last:border-b-0">
       <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
       <span className={`text-sm font-semibold ${valueClass ?? 'text-gray-900 dark:text-gray-100'}`}>{value}</span>
+    </div>
+  );
+}
+
+function ObservationModal({
+  employeeName,
+  dateLabel,
+  value,
+  onSave,
+  onClose,
+}: {
+  employeeName: string;
+  dateLabel: string;
+  value: string;
+  onSave: (text: string) => void;
+  onClose: () => void;
+}) {
+  const [draft, setDraft] = useState(value);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  const handleBackdrop = useCallback(
+    (e: React.MouseEvent) => { if (e.target === e.currentTarget) onClose(); },
+    [onClose]
+  );
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={handleBackdrop}
+    >
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-md mx-4">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Observación</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {employeeName} — {dateLabel}
+            </p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-5 py-4">
+          <textarea
+            ref={textareaRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Escribe una observación para este registro..."
+            rows={4}
+            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 resize-none"
+          />
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-gray-100 dark:border-gray-700">
+          {value && (
+            <button
+              onClick={() => onSave('')}
+              className="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors mr-auto"
+            >
+              Eliminar
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="px-4 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onSave(draft)}
+            className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+          >
+            Guardar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useDataState } from '../../context/DataContext';
+import { useObservations } from '../../context/ObservationContext';
 import { useScheduleState } from '../../context/ScheduleContext';
 import { useTableControls } from '../../hooks/useTableControls';
 import { exportAttendanceExcel } from '../../utils/excelExporter';
@@ -57,6 +58,7 @@ interface Props {
 
 export function DataTable({ onSelectEmployee, departmentFilter }: Props) {
   const { parsedData } = useDataState();
+  const { observations } = useObservations();
   const schedules = useScheduleState();
   if (!parsedData) return null;
 
@@ -238,7 +240,7 @@ export function DataTable({ onSelectEmployee, departmentFilter }: Props) {
     <button
       onClick={() => {
         if (isAttendance && attendanceKeys) {
-          exportAttendanceExcel(allRows, attendanceKeys, schedules);
+          exportAttendanceExcel(allRows, attendanceKeys, schedules, observations);
         }
       }}
       className="fixed bottom-6 right-6 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all z-50"
