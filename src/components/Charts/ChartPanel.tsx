@@ -29,7 +29,7 @@ export function ChartPanel() {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-gray-800">Gráficos</h2>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Gráficos</h2>
       </div>
 
       {/* Auto-suggested charts */}
@@ -42,9 +42,9 @@ export function ChartPanel() {
       )}
 
       {/* Custom chart */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-gray-600">Gráfico personalizado</h3>
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Gráfico personalizado</h3>
           <ChartSelector
             columns={columns}
             chartType={customChart?.type ?? 'bar'}

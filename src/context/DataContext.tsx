@@ -51,8 +51,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     prevSchedulesRef.current = schedules;
 
     const { rows, columns, attendanceKeys } = state.parsedData;
-    const updatedRows = recomputeLateness(rows, attendanceKeys, (dept, empId) =>
-      getEmployeeLimits(schedules, dept, empId)
+    const updatedRows = recomputeLateness(rows, attendanceKeys, (dept, empId, date) =>
+      getEmployeeLimits(schedules, dept, empId, date)
     );
     dispatch({
       type: 'SET_DATA',
