@@ -58,11 +58,20 @@ export interface ChartSuggestion {
   title: string;
 }
 
+export interface ScheduleRange {
+  id: string;           // identificador único
+  startDate: string;    // "YYYY-MM-DD"
+  endDate: string;      // "YYYY-MM-DD"
+  entryTime: number;    // minutos desde medianoche
+  exitTime: number;     // minutos desde medianoche
+}
+
 export interface EmployeeSchedule {
   employeeId: string;
   employeeName: string;
   entryTime: number | null;  // minutos desde medianoche, null = usa default del depto
   exitTime: number | null;
+  scheduleRanges: ScheduleRange[];
 }
 
 export interface DepartmentSchedule {

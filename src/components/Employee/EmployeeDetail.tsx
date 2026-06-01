@@ -136,7 +136,7 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
 
   if (!data) {
     return (
-      <div className="text-center py-12 text-gray-500">
+      <div className="text-center py-12 text-gray-500 dark:text-gray-400">
         <p className="text-sm">No se encontraron datos para este colaborador.</p>
         <button onClick={onBack} className="mt-2 text-blue-600 text-sm hover:underline">Volver a lista</button>
       </div>
@@ -158,7 +158,7 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
       <div className="mb-6">
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors mb-4"
+          className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors mb-4"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -167,15 +167,15 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
         </button>
 
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xl font-bold">
+          <div className="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 flex items-center justify-center text-xl font-bold">
             {data.employeeName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">{data.employeeName}</h2>
-            <div className="flex items-center gap-3 text-sm text-gray-500 mt-0.5">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">{data.employeeName}</h2>
+            <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               {data.empIdDisplay && <span>ID: {data.empIdDisplay}</span>}
               {data.department !== '—' && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs">
                   {data.department}
                 </span>
               )}
@@ -194,8 +194,8 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
       {/* Charts + info row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         {/* Pie chart */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <h3 className="text-sm font-medium text-gray-600 mb-3">Puntualidad</h3>
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">Puntualidad</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
@@ -220,8 +220,8 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
         </div>
 
         {/* Quick stats */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <h3 className="text-sm font-medium text-gray-600 mb-4">Resumen de horarios</h3>
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-4">Resumen de horarios</h3>
           <div className="space-y-3">
             <InfoRow label="Entrada más temprana" value={data.earliestEntry} />
             <InfoRow label="Salida más tardía" value={data.latestExit} />
@@ -233,16 +233,16 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
       </div>
 
       {/* Records table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-700">Registros de asistencia</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Registros de asistencia</h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm text-gray-900 dark:text-gray-200">
             <thead>
-              <tr className="bg-gray-50">
+              <tr className="bg-gray-50 dark:bg-gray-800">
                 {data.tableColumns.map((col) => (
-                  <th key={col} className="px-4 py-3 text-left font-medium text-gray-600 whitespace-nowrap">
+                  <th key={col} className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">
                     {col}
                   </th>
                 ))}
@@ -250,7 +250,7 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
             </thead>
             <tbody>
               {data.empRows.map((row, i) => (
-                <tr key={i} className="border-t border-gray-100 hover:bg-gray-50">
+                <tr key={i} className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
                   {data.tableColumns.map((col) => (
                     <td
                       key={col}
@@ -271,11 +271,11 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
 
 function SummaryCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
-      <p className="text-xs text-gray-500 mb-1">{label}</p>
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{label}</p>
       <p className={`text-lg font-bold ${color}`}>
         {value}
-        {sub && <span className="text-xs font-normal text-gray-400 ml-1">{sub}</span>}
+        {sub && <span className="text-xs font-normal text-gray-400 dark:text-gray-500 ml-1">{sub}</span>}
       </p>
     </div>
   );
@@ -283,9 +283,9 @@ function SummaryCard({ label, value, sub, color }: { label: string; value: strin
 
 function InfoRow({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-gray-50 last:border-b-0">
-      <span className="text-sm text-gray-500">{label}</span>
-      <span className={`text-sm font-semibold ${valueClass ?? 'text-gray-900'}`}>{value}</span>
+    <div className="flex items-center justify-between py-2 border-b border-gray-50 dark:border-gray-800 last:border-b-0">
+      <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
+      <span className={`text-sm font-semibold ${valueClass ?? 'text-gray-900 dark:text-white'}`}>{value}</span>
     </div>
   );
 }

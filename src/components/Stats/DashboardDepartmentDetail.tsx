@@ -89,7 +89,7 @@ export function DashboardDepartmentDetail({ department, colorIndex, onBack, onSe
       <div className="mb-6">
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors mb-4"
+          className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors mb-4"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -102,8 +102,8 @@ export function DashboardDepartmentDetail({ department, colorIndex, onBack, onSe
             {department.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">{department}</h2>
-            <p className="text-sm text-gray-500 mt-0.5">Departamento</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">{department}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Departamento</p>
           </div>
         </div>
       </div>
@@ -111,21 +111,21 @@ export function DashboardDepartmentDetail({ department, colorIndex, onBack, onSe
       {/* Summary cards */}
       {summary && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
             <p className="text-2xl font-bold text-blue-600">{summary.employeeCount}</p>
-            <p className="text-sm text-gray-500">Colaboradores</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Colaboradores</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-            <p className="text-2xl font-bold text-gray-700">{entry} - {exit}</p>
-            <p className="text-sm text-gray-500">Horario</p>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <p className="text-2xl font-bold text-gray-700 dark:text-gray-200">{entry} - {exit}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Horario</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
             <p className="text-2xl font-bold text-red-600">{summary.lateCount}</p>
-            <p className="text-sm text-gray-500">Llegaron tarde</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Llegaron tarde</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
             <p className="text-2xl font-bold text-green-600">{summary.onTimeCount}</p>
-            <p className="text-sm text-gray-500">A tiempo</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">A tiempo</p>
           </div>
         </div>
       )}
@@ -133,33 +133,33 @@ export function DashboardDepartmentDetail({ department, colorIndex, onBack, onSe
       {/* Employee summary table */}
       {employeeSummaries.length > 0 && (
         <>
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">Colaboradores</h3>
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">Colaboradores</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm text-gray-900 dark:text-gray-200">
                 <thead>
-                  <tr className="bg-gray-50">
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">User ID</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">Nombre</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">Días registrados</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">Llegadas tarde</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">Tiempo acumulado tarde</th>
+                  <tr className="bg-gray-50 dark:bg-gray-800">
+                    <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">User ID</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">Nombre</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">Días registrados</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">Llegadas tarde</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">Tiempo acumulado tarde</th>
                   </tr>
                 </thead>
                 <tbody>
                   {employeeSummaries.map((emp) => (
                     <tr
                       key={emp.id}
-                      className={`border-t border-gray-100 hover:bg-gray-50 ${onSelectEmployee ? 'cursor-pointer' : ''}`}
+                      className={`border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 ${onSelectEmployee ? 'cursor-pointer' : ''}`}
                       onClick={() => onSelectEmployee?.(emp.id)}
                     >
-                      <td className="px-4 py-2.5 whitespace-nowrap text-gray-600">{emp.id}</td>
-                      <td className="px-4 py-2.5 whitespace-nowrap font-medium text-gray-900">{emp.name}</td>
+                      <td className="px-4 py-2.5 whitespace-nowrap text-gray-600 dark:text-gray-300">{emp.id}</td>
+                      <td className="px-4 py-2.5 whitespace-nowrap font-medium text-gray-900 dark:text-white">{emp.name}</td>
                       <td className="px-4 py-2.5 whitespace-nowrap">{emp.totalDays}</td>
                       <td className={`px-4 py-2.5 whitespace-nowrap font-medium ${emp.lateDays > 0 ? 'text-red-600' : 'text-green-600'}`}>
                         {emp.lateDays}
                       </td>
-                      <td className={`px-4 py-2.5 whitespace-nowrap ${emp.lateMinutes > 0 ? 'text-red-600' : 'text-gray-500'}`}>
+                      <td className={`px-4 py-2.5 whitespace-nowrap ${emp.lateMinutes > 0 ? 'text-red-600' : 'text-gray-500 dark:text-gray-400'}`}>
                         {emp.lateMinutes > 0 ? fmtMinutes(emp.lateMinutes) : '—'}
                       </td>
                     </tr>
@@ -172,7 +172,7 @@ export function DashboardDepartmentDetail({ department, colorIndex, onBack, onSe
       )}
 
       {/* Filtered table */}
-      <h3 className="text-lg font-semibold text-gray-800 mb-3">Registros del departamento</h3>
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">Registros del departamento</h3>
       <DataTable departmentFilter={department} onSelectEmployee={onSelectEmployee} />
     </div>
   );
