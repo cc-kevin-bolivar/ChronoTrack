@@ -43,8 +43,8 @@ export function FileDropZone() {
           w-full max-w-lg p-12 border-2 border-dashed rounded-2xl text-center cursor-pointer
           transition-all duration-200
           ${isDragging
-            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 scale-105'
-            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-750'
+            ? 'border-blue-500 bg-blue-50 dark:bg-gray-950 scale-105'
+            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
           }
         `}
       >
@@ -59,7 +59,7 @@ export function FileDropZone() {
         {isLoading ? (
           <div className="flex flex-col items-center gap-3">
             <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-gray-600 dark:text-gray-400">Procesando archivo...</p>
+            <p className="text-gray-600 dark:text-gray-300">Procesando archivo...</p>
           </div>
         ) : (
           <>
@@ -76,7 +76,7 @@ export function FileDropZone() {
         )}
 
         {error && (
-          <p className="mt-4 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 px-4 py-2 rounded-lg whitespace-pre-line text-left">
+          <p className="mt-4 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-lg">
             {error}
           </p>
         )}

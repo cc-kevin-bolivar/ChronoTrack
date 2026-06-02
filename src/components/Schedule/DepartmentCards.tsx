@@ -62,7 +62,7 @@ export function DepartmentCards({ onSelectDepartment }: Props) {
             placeholder="Buscar departamento..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 dark:placeholder:text-gray-500"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -78,14 +78,14 @@ export function DepartmentCards({ onSelectDepartment }: Props) {
             <button
               key={dept.name}
               onClick={() => onSelectDepartment(dept.name)}
-              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 text-left hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md transition-all duration-150 group"
+              className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 text-left hover:border-blue-300 hover:shadow-md transition-all duration-150 group"
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold ${getDeptColor(idx)}`}>
                   {dept.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-700 transition-colors">
                     {dept.name}
                   </h3>
                   <p className="text-xs text-gray-400 dark:text-gray-500">

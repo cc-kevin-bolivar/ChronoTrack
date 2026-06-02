@@ -253,19 +253,25 @@ export function exportAttendanceExcel(
     row.push(plainCell(emp.userId));
     row.push(textCell(emp.userName));
 
-    // Get employee's scheduled entry/exit from ScheduleConfig
-    const { entryLimit, exitLimit } = getEmployeeLimits(
-      schedules,
-      emp.team || undefined,
-      emp.userId || undefined
+    // Get employee's default scheduled entry/exit from ScheduleConfig
+    const empTeam = emp.team || undefined;
+    const empId = emp.userId || undefined;
+    const { entryLimit: defaultEntry, exitLimit: defaultExit } = getEmployeeLimits(
+      schedules, empTeam, empId
     );
-    const scheduledEntry12 = to12h(minutesToTimeStr(entryLimit));
-    const scheduledExit12 = to12h(minutesToTimeStr(exitLimit));
+
+    // Check if employee has date-specific ranges
+    const deptSched = empTeam ? schedules[empTeam] : undefined;
+    const empSched = deptSched?.employees.find((e) => e.employeeId === empId);
+    const hasRanges = (empSched?.scheduleRanges.length ?? 0) > 0;
+
+    const scheduledEntry12 = hasRanges ? 'Variable' : to12h(minutesToTimeStr(defaultEntry));
+    const scheduledExit12 = hasRanges ? 'Variable' : to12h(minutesToTimeStr(defaultExit));
 
     row.push(plainCell(scheduledEntry12));
     row.push(plainCell(scheduledExit12));
 
-    // Day columns — use employee's scheduled entry as late threshold
+    // Day columns — use date-specific schedule for late threshold
     for (const dk of sortedDates) {
       const dayData = emp.days.get(dk);
       const entry = observations[`${empKey}|${dk}`];
@@ -277,18 +283,14 @@ export function exportAttendanceExcel(
         row.push(obs ? textCell(obs) : plainCell(''));
         continue;
       }
+      const { entryLimit: dayEntryLimit } = getEmployeeLimits(schedules, empTeam, empId, dk);
       const ent12 = to12h(dayData.entrada);
       const sal12 = to12h(dayData.salida);
       const entMin = parseMinutes(dayData.entrada);
 
       if (ent12) {
-        const isLate = entMin !== null && entMin > entryLimit;
-        if (!isLate) {
-          row.push(greenCell(ent12));
-        } else {
-          // Excused late arrivals are shown amber instead of red.
-          row.push(omitLate ? justifiedCell(ent12) : redCell(ent12));
-        }
+        row.push(entMin !== null && entMin <= dayEntryLimit
+          ? greenCell(ent12) : redCell(ent12));
       } else {
         row.push(plainCell(''));
       }

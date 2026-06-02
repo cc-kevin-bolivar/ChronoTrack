@@ -28,7 +28,7 @@ export function DepartmentCard({ summary, index, onClick }: Props) {
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 ${onClick ? 'cursor-pointer hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md transition-all duration-150' : ''}`}
+      className={`bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 ${onClick ? 'cursor-pointer hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md transition-all duration-150' : ''}`}
       onClick={onClick}
     >
       <div className="flex items-center gap-3 mb-3">
@@ -36,7 +36,7 @@ export function DepartmentCard({ summary, index, onClick }: Props) {
           {summary.department.charAt(0).toUpperCase()}
         </div>
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{summary.department}</h3>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">{summary.department}</h3>
           <p className="text-xs text-gray-400 dark:text-gray-500">
             {summary.employeeCount} {summary.employeeCount === 1 ? 'colaborador' : 'colaboradores'}
           </p>
@@ -45,15 +45,15 @@ export function DepartmentCard({ summary, index, onClick }: Props) {
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
         <div>
           <span className="text-gray-400 dark:text-gray-500">Horario</span>
-          <p className="font-semibold text-gray-900 dark:text-gray-100">{summary.schedule}</p>
+          <p className="font-semibold text-gray-900 dark:text-white">{summary.schedule}</p>
         </div>
         <div>
           <span className="text-gray-400 dark:text-gray-500">Llegaron tarde</span>
-          <p className="font-semibold text-red-600 dark:text-red-400">{summary.lateCount}</p>
+          <p className="font-semibold text-red-600">{summary.lateCount}</p>
         </div>
         <div>
           <span className="text-gray-400 dark:text-gray-500">A tiempo</span>
-          <p className="font-semibold text-green-600 dark:text-green-400">{onTimeCount}</p>
+          <p className="font-semibold text-green-600">{onTimeCount}</p>
         </div>
       </div>
     </div>

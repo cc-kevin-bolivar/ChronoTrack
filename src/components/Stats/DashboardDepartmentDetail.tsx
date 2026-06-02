@@ -146,7 +146,7 @@ export function DashboardDepartmentDetail({ department, colorIndex, onBack, onSe
             {department.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{department}</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">{department}</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Departamento</p>
           </div>
         </div>
@@ -155,20 +155,20 @@ export function DashboardDepartmentDetail({ department, colorIndex, onBack, onSe
       {/* Summary cards */}
       {summary && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{summary.employeeCount}</p>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <p className="text-2xl font-bold text-blue-600">{summary.employeeCount}</p>
             <p className="text-sm text-gray-500 dark:text-gray-400">Colaboradores</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
-            <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">{entry} - {exit}</p>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <p className="text-2xl font-bold text-gray-700 dark:text-gray-200">{entry} - {exit}</p>
             <p className="text-sm text-gray-500 dark:text-gray-400">Horario</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
-            <p className="text-2xl font-bold text-red-600 dark:text-red-400">{summary.lateCount}</p>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <p className="text-2xl font-bold text-red-600">{summary.lateCount}</p>
             <p className="text-sm text-gray-500 dark:text-gray-400">Llegaron tarde</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{summary.onTimeCount}</p>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <p className="text-2xl font-bold text-green-600">{summary.onTimeCount}</p>
             <p className="text-sm text-gray-500 dark:text-gray-400">A tiempo</p>
           </div>
         </div>

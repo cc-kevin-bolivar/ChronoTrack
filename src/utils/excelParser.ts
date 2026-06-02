@@ -274,17 +274,33 @@ export function parseExcel(buffer: ArrayBuffer, sheetIndex = 0): ParsedData {
  */
 export function recomputeLateness(
   rows: Row[],
-  attendanceKeys: { clockInKey?: string; clockOutKey?: string; departmentKey?: string; userIdKey?: string },
-  getLimits: (dept: string | undefined, employeeId: string | undefined) => { entryLimit: number; exitLimit: number }
+  attendanceKeys: { clockInKey?: string; clockOutKey?: string; departmentKey?: string; userIdKey?: string; dateKey?: string },
+  getLimits: (dept: string | undefined, employeeId: string | undefined, date?: string) => { entryLimit: number; exitLimit: number }
 ): Row[] {
-  const { clockInKey, clockOutKey, departmentKey, userIdKey } = attendanceKeys;
+  const { clockInKey, clockOutKey, departmentKey, userIdKey, dateKey } = attendanceKeys;
   if (!clockInKey || !clockOutKey) return rows;
 
   return rows.map((row) => {
     const newRow = { ...row };
     const dept = departmentKey ? String(row[departmentKey] ?? '').trim() : undefined;
     const empId = userIdKey ? String(row[userIdKey] ?? '').trim() : undefined;
-    const { entryLimit, exitLimit } = getLimits(dept, empId);
+
+    // Normalize date for schedule range lookup
+    let dateStr: string | undefined;
+    if (dateKey) {
+      const rawDate = row[dateKey];
+      if (rawDate instanceof Date && !isNaN(rawDate.getTime())) {
+        const y = rawDate.getFullYear();
+        const m = (rawDate.getMonth() + 1).toString().padStart(2, '0');
+        const d = rawDate.getDate().toString().padStart(2, '0');
+        dateStr = `${y}-${m}-${d}`;
+      } else if (typeof rawDate === 'string') {
+        const match = rawDate.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if (match) dateStr = match[0];
+      }
+    }
+
+    const { entryLimit, exitLimit } = getLimits(dept, empId, dateStr);
 
     const inMin = timeToMinutes(row[clockInKey]);
     const outMin = timeToMinutes(row[clockOutKey]);

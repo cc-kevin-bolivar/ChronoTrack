@@ -27,7 +27,7 @@ export function ChartPanel() {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Gráficos</h2>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Gráficos</h2>
       </div>
 
       {/* Auto-suggested charts */}
@@ -39,10 +39,28 @@ export function ChartPanel() {
         </div>
       )}
 
-      {/* Late vs On-time chart (attendance mode only) */}
-      {isAttendance && (
-        <LateVsOnTimeChart rows={rows} />
-      )}
+      {/* Custom chart */}
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Gráfico personalizado</h3>
+          <ChartSelector
+            columns={columns}
+            chartType={customChart?.type ?? 'bar'}
+            xKey={customChart?.xKey ?? columns[0].key}
+            yKey={customChart?.yKey ?? (columns[1]?.key ?? columns[0].key)}
+            onChangeType={(t) => setCustomChart((prev) => ({ type: t, xKey: prev?.xKey ?? columns[0].key, yKey: prev?.yKey ?? columns[1]?.key ?? columns[0].key }))}
+            onChangeX={(k) => setCustomChart((prev) => ({ type: prev?.type ?? 'bar', xKey: k, yKey: prev?.yKey ?? columns[1]?.key ?? columns[0].key }))}
+            onChangeY={(k) => setCustomChart((prev) => ({ type: prev?.type ?? 'bar', xKey: prev?.xKey ?? columns[0].key, yKey: k }))}
+          />
+        </div>
+        <ChartByType
+          type={customChart?.type ?? 'bar'}
+          rows={rows}
+          xKey={customChart?.xKey ?? columns[0].key}
+          yKey={customChart?.yKey ?? (columns[1]?.key ?? columns[0].key)}
+          title="Gráfico personalizado"
+        />
+      </div>
     </div>
   );
 }
