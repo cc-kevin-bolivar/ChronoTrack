@@ -1,4 +1,5 @@
 import { useDataState } from '../../context/DataContext';
+import { useEffectiveRows } from '../../hooks/useEffectiveRows';
 import { BarChartView } from './BarChartView';
 import { LineChartView } from './LineChartView';
 import { PieChartView } from './PieChartView';
@@ -17,10 +18,10 @@ function ChartByType({ type, rows, xKey, yKey, title }: { type: string; rows: Ro
 
 export function ChartPanel() {
   const { parsedData, chartSuggestions } = useDataState();
+  const rows = useEffectiveRows();
 
   if (!parsedData || parsedData.columns.length < 2) return null;
 
-  const { rows } = parsedData;
   const isAttendance = parsedData.isAttendance;
 
   return (

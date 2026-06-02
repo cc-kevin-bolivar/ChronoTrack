@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useDataState } from '../../context/DataContext';
+import { useEffectiveRows } from '../../hooks/useEffectiveRows';
 import { useScheduleState, minutesToTimeStr, DEFAULT_ENTRY, DEFAULT_EXIT } from '../../context/ScheduleContext';
 import { useTheme } from '../../context/ThemeContext';
 import { DataTable } from '../Table/DataTable';
@@ -31,6 +32,7 @@ interface Props {
 
 export function DashboardDepartmentDetail({ department, colorIndex, onBack, onSelectEmployee }: Props) {
   const { parsedData } = useDataState();
+  const effectiveRows = useEffectiveRows();
   const schedules = useScheduleState();
   const { theme } = useTheme();
 
@@ -47,7 +49,7 @@ export function DashboardDepartmentDetail({ department, colorIndex, onBack, onSe
 
     const map = new Map<string, { name: string; totalDays: number; lateDays: number; lateMinutes: number }>();
 
-    for (const row of parsedData.rows) {
+    for (const row of effectiveRows) {
       const dept = String(row[departmentKey] ?? '').trim();
       if (dept !== department) continue;
       const empId = String(row[empKey] ?? '').trim();
@@ -71,7 +73,7 @@ export function DashboardDepartmentDetail({ department, colorIndex, onBack, onSe
     return Array.from(map.entries())
       .map(([id, data]) => ({ id, ...data }))
       .sort((a, b) => a.name.localeCompare(b.name, 'es-ES'));
-  }, [parsedData, department]);
+  }, [parsedData, effectiveRows, department]);
 
   // Derive summary from employeeSummaries
   const summary = useMemo(() => {
@@ -93,7 +95,7 @@ export function DashboardDepartmentDetail({ department, colorIndex, onBack, onSe
 
     const dayMap = new Map<string, Set<string>>();
 
-    for (const row of parsedData.rows) {
+    for (const row of effectiveRows) {
       const dept = String(row[departmentKey] ?? '').trim();
       if (dept !== department) continue;
 
@@ -119,7 +121,7 @@ export function DashboardDepartmentDetail({ department, colorIndex, onBack, onSe
         const pb = b.fecha.split('/').reverse().join('');
         return pa.localeCompare(pb);
       });
-  }, [parsedData, department]);
+  }, [parsedData, effectiveRows, department]);
 
   const [activeTab, setActiveTab] = useState<'colaboradores' | 'graficas' | 'registros'>('colaboradores');
   const color = DEPT_COLORS[colorIndex % DEPT_COLORS.length];

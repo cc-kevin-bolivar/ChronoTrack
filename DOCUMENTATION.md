@@ -82,6 +82,7 @@ Vista principal con resumen general de asistencia.
 - Gráfica de dona con proporción puntualidad vs tardanza
 - Estadísticas rápidas: entrada más temprana, salida más tardía, días a tiempo, promedio de minutos tarde
 - Tabla con todos los registros del empleado
+- **Observaciones por registro**: cada fila de la tabla incluye una columna "Observación" editable. Al hacer clic se abre un modal para crear, editar o eliminar la observación. Las observaciones se persisten en `localStorage` y se incluyen en la exportación a Excel.
 
 ---
 
@@ -148,7 +149,7 @@ Botón flotante en la esquina inferior derecha de la vista de lista.
 **Estructura del archivo exportado** (`control_asistencia.xlsx`):
 - Columnas fijas: Departamento, User ID, Nombre
 - Columnas de horario base: Entrada y Salida configuradas
-- Columnas dinámicas: una pareja Entrada/Salida por cada fecha en los datos
+- Columnas dinámicas: por cada fecha se generan columnas de Entrada, Salida y Observación
 
 **Formato:**
 - Fechas en español completo (ej: "martes 01 de abril del 2025")
@@ -182,7 +183,8 @@ App
 ├── ThemeProvider
 │   └── ScheduleProvider
 │       └── DataProvider
-│           └── AppContent
+│           └── ObservationProvider
+│               └── AppContent
 │               ├── FileDropZone (estado inicial, sin datos)
 │               └── DashboardLayout (con datos cargados)
 │                   ├── Sidebar (navegación + tema)
@@ -205,6 +207,7 @@ App
 | **ThemeContext** | Modo claro/oscuro, persistencia en localStorage |
 | **DataContext** | Datos parseados, estadísticas, sugerencias de gráficas, recálculo de tardanzas |
 | **ScheduleContext** | Horarios por departamento y empleado, límites de entrada/salida |
+| **ObservationContext** | Observaciones por registro de asistencia (empleado + fecha), persistencia en localStorage |
 
 ---
 
