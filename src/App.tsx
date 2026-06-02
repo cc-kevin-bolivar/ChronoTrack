@@ -15,7 +15,9 @@ function App() {
     <ThemeProvider>
       <ScheduleProvider>
         <DataProvider>
-          <AppContent />
+          <ObservationProvider>
+            <AppContent />
+          </ObservationProvider>
         </DataProvider>
       </ScheduleProvider>
     </ThemeProvider>

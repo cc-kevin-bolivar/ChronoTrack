@@ -289,8 +289,13 @@ export function exportAttendanceExcel(
       const entMin = parseMinutes(dayData.entrada);
 
       if (ent12) {
-        row.push(entMin !== null && entMin <= dayEntryLimit
-          ? greenCell(ent12) : redCell(ent12));
+        const isLate = entMin !== null && entMin > dayEntryLimit;
+        if (!isLate) {
+          row.push(greenCell(ent12));
+        } else {
+          // Excused late arrivals are shown amber instead of red.
+          row.push(omitLate ? justifiedCell(ent12) : redCell(ent12));
+        }
       } else {
         row.push(plainCell(''));
       }
