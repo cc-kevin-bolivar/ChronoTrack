@@ -1,6 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useDataState } from '../../context/DataContext';
+import { useObservations } from '../../context/ObservationContext';
+import { useTheme } from '../../context/ThemeContext';
+import { normalizeDateKey } from '../../utils/excelExporter';
 
 interface Props {
   employeeId: string;
@@ -28,12 +31,12 @@ function minutesToTimeStr(minutes: number): string {
 
 function getCellClass(value: unknown, colKey: string): string {
   if (colKey === 'Entrada Tardía' && typeof value === 'string') {
-    if (value.startsWith('Tarde')) return 'text-red-600 font-medium';
-    if (value === 'A tiempo') return 'text-green-600';
+    if (value.startsWith('Tarde')) return 'text-red-600 dark:text-red-400 font-medium';
+    if (value === 'A tiempo') return 'text-green-600 dark:text-green-400';
   }
   if (colKey === 'Salida Tardía' && typeof value === 'string') {
-    if (value.startsWith('Extra')) return 'text-amber-600 font-medium';
-    if (value === 'A tiempo') return 'text-green-600';
+    if (value.startsWith('Extra')) return 'text-amber-600 dark:text-amber-400 font-medium';
+    if (value === 'A tiempo') return 'text-green-600 dark:text-green-400';
   }
   return '';
 }
@@ -51,6 +54,9 @@ const PIE_COLORS = ['#10b981', '#ef4444']; // green, red
 
 export function EmployeeDetail({ employeeId, onBack }: Props) {
   const { parsedData } = useDataState();
+  const { getObservation, getEntry, setObservation, omittedSet } = useObservations();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   const data = useMemo(() => {
     if (!parsedData?.isAttendance || !parsedData.attendanceKeys) return null;
@@ -59,7 +65,7 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
     const idKey = attendanceKeys.userIdKey ?? attendanceKeys.userNameKey;
     if (!idKey) return null;
 
-    const empRows = rows.filter((r) => String(r[idKey] ?? '') === employeeId);
+    const empRows = rows.filter((r) => String(r[idKey] ?? '').trim() === employeeId.trim());
     if (empRows.length === 0) return null;
 
     const employeeName = attendanceKeys.userNameKey
@@ -80,13 +86,19 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
     const entries: number[] = [];
     const exits: number[] = [];
 
-    for (const row of empRows) {
+    for (let i = 0; i < empRows.length; i++) {
+      const row = empRows[i];
+      const dateVal = attendanceKeys.dateKey ? row[attendanceKeys.dateKey] : null;
+      const dateStr = normalizeDateKey(dateVal) ?? String(i);
+      const omitted = omittedSet.has(`${employeeId}|${dateStr}`);
+
       const entradaTardia = row['Entrada Tardía'];
-      if (typeof entradaTardia === 'string' && entradaTardia.startsWith('Tarde')) {
+      const isLate = typeof entradaTardia === 'string' && entradaTardia.startsWith('Tarde');
+      if (isLate && !omitted) {
         lateDays++;
+        const lateMins = row['_entradaTardeMin'];
+        if (typeof lateMins === 'number') totalLateMinutes += lateMins;
       }
-      const lateMins = row['_entradaTardeMin'];
-      if (typeof lateMins === 'number') totalLateMinutes += lateMins;
 
       const extraMins = row['_salidaTardeMin'];
       if (typeof extraMins === 'number') totalExtraMinutes += extraMins;
@@ -114,7 +126,7 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
     if (attendanceKeys.dateKey) tableColumns.push(attendanceKeys.dateKey);
     if (attendanceKeys.clockInKey) tableColumns.push(attendanceKeys.clockInKey);
     if (attendanceKeys.clockOutKey) tableColumns.push(attendanceKeys.clockOutKey);
-    tableColumns.push('Horas Trabajadas', 'Entrada Tardía', 'Salida Tardía');
+    tableColumns.push('Entrada Tardía', 'Salida Tardía');
 
     return {
       employeeName,
@@ -132,13 +144,15 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
       empRows,
       tableColumns,
     };
-  }, [parsedData, employeeId]);
+  }, [parsedData, employeeId, omittedSet]);
+
+  const [modalInfo, setModalInfo] = useState<{ dateKey: string; dateLabel: string; isLate: boolean } | null>(null);
 
   if (!data) {
     return (
       <div className="text-center py-12 text-gray-500 dark:text-gray-400">
         <p className="text-sm">No se encontraron datos para este colaborador.</p>
-        <button onClick={onBack} className="mt-2 text-blue-600 text-sm hover:underline">Volver a lista</button>
+        <button onClick={onBack} className="mt-2 text-blue-600 dark:text-blue-400 text-sm hover:underline">Volver a lista</button>
       </div>
     );
   }
@@ -186,9 +200,9 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-        <SummaryCard label="Días presentes" value={String(data.totalDays)} color="text-blue-600" />
-        <SummaryCard label="Llegadas tarde" value={`${data.lateDays} de ${data.totalDays}`} sub={`${latePercent}%`} color="text-red-600" />
-        <SummaryCard label="Total tiempo tarde" value={minutesToDisplay(data.totalLateMinutes)} color="text-red-600" />
+        <SummaryCard label="Días presentes" value={String(data.totalDays)} color="text-blue-600 dark:text-blue-400" />
+        <SummaryCard label="Llegadas tarde" value={`${data.lateDays} de ${data.totalDays}`} sub={`${latePercent}%`} color="text-red-600 dark:text-red-400" />
+        <SummaryCard label="Total tiempo tarde" value={minutesToDisplay(data.totalLateMinutes)} color="text-red-600 dark:text-red-400" />
       </div>
 
       {/* Charts + info row */}
@@ -213,8 +227,12 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
                   <Cell key={i} fill={PIE_COLORS[i]} />
                 ))}
               </Pie>
-              <Tooltip />
-              <Legend />
+              <Tooltip
+                contentStyle={isDark ? { backgroundColor: '#1f2937', border: '1px solid #374151', color: '#f3f4f6' } : undefined}
+                labelStyle={isDark ? { color: '#f3f4f6' } : undefined}
+                itemStyle={isDark ? { color: '#f3f4f6' } : undefined}
+              />
+              <Legend wrapperStyle={isDark ? { color: '#d1d5db' } : undefined} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -225,8 +243,8 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
           <div className="space-y-3">
             <InfoRow label="Entrada más temprana" value={data.earliestEntry} />
             <InfoRow label="Salida más tardía" value={data.latestExit} />
-            <InfoRow label="Días a tiempo" value={`${data.onTimeDays} de ${data.totalDays}`} valueClass="text-green-600" />
-            <InfoRow label="Días con entrada tarde" value={`${data.lateDays} de ${data.totalDays}`} valueClass="text-red-600" />
+            <InfoRow label="Días a tiempo" value={`${data.onTimeDays} de ${data.totalDays}`} valueClass="text-green-600 dark:text-green-400" />
+            <InfoRow label="Días con entrada tarde" value={`${data.lateDays} de ${data.totalDays}`} valueClass="text-red-600 dark:text-red-400" />
             <InfoRow label="Promedio minutos tarde (días tarde)" value={data.lateDays > 0 ? minutesToDisplay(Math.round(data.totalLateMinutes / data.lateDays)) : '—'} />
           </div>
         </div>
@@ -246,6 +264,9 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
                     {col}
                   </th>
                 ))}
+                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                  Observación
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -258,13 +279,29 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
                     >
                       {formatCell(row[col])}
                     </td>
-                  ))}
-                </tr>
-              ))}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Modal de observación */}
+      {modalInfo && (
+        <ObservationModal
+          employeeName={data.employeeName}
+          dateLabel={modalInfo.dateLabel}
+          isLate={modalInfo.isLate}
+          value={getObservation(employeeId, modalInfo.dateKey)}
+          initialOmitLate={getEntry(employeeId, modalInfo.dateKey).omitLate}
+          onSave={(text, omitLate) => {
+            setObservation(employeeId, modalInfo.dateKey, text, omitLate);
+            setModalInfo(null);
+          }}
+          onClose={() => setModalInfo(null)}
+        />
+      )}
     </div>
   );
 }

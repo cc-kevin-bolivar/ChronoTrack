@@ -22,6 +22,12 @@ export interface ColumnStats {
 
 export type Row = Record<string, string | number | Date | null>;
 
+export interface ObservationEntry {
+  text: string;
+  /** When true, a late arrival on this record is excused (not counted as late). */
+  omitLate: boolean;
+}
+
 export interface AttendanceKeys {
   departmentKey?: string;
   userIdKey?: string;

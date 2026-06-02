@@ -1,5 +1,5 @@
 import XLSX from 'xlsx-js-style';
-import type { Row, AttendanceKeys, ScheduleConfig } from '../types/data';
+import type { Row, AttendanceKeys, ScheduleConfig, ObservationEntry } from '../types/data';
 import { getEmployeeLimits, minutesToTimeStr } from '../context/ScheduleContext';
 
 /* ── helpers ─────────────────────────────────────────────── */
@@ -40,7 +40,7 @@ function formatDayLabel(date: Date): string {
 }
 
 /** Normalize a date value to "YYYY-MM-DD" string for grouping */
-function normalizeDateKey(value: unknown): string | null {
+export function normalizeDateKey(value: unknown): string | null {
   if (value instanceof Date && !isNaN(value.getTime())) {
     const y = value.getFullYear();
     const m = (value.getMonth() + 1).toString().padStart(2, '0');
@@ -115,6 +115,19 @@ function redCell(value: string): XLSX.CellObject {
   };
 }
 
+/** Late arrival that has been excused via an observation: amber, not red. */
+function justifiedCell(value: string): XLSX.CellObject {
+  return {
+    v: value, t: 's',
+    s: {
+      font: { color: { rgb: '9C6500' }, sz: 10 },
+      fill: { fgColor: { rgb: 'FFEB9C' } },
+      alignment: { horizontal: 'center' },
+      border: CELL_BORDER,
+    },
+  };
+}
+
 function plainCell(value: string): XLSX.CellObject {
   return {
     v: value, t: 's',
@@ -142,7 +155,12 @@ interface EmployeeDayData {
   salida: string;
 }
 
-export function exportAttendanceExcel(rows: Row[], keys: AttendanceKeys, schedules: ScheduleConfig = {}): void {
+export function exportAttendanceExcel(
+  rows: Row[],
+  keys: AttendanceKeys,
+  schedules: ScheduleConfig = {},
+  observations: Record<string, ObservationEntry> = {},
+): void {
   const {
     departmentKey,
     userIdKey,
@@ -208,6 +226,7 @@ export function exportAttendanceExcel(rows: Row[], keys: AttendanceKeys, schedul
     const label = formatDayLabel(d);
     headerRow.push({ v: label, t: 's', s: HEADER_STYLE });
     headerRow.push({ v: '', t: 's', s: HEADER_STYLE }); // merged with prev
+    headerRow.push({ v: '', t: 's', s: HEADER_STYLE }); // merged with prev (Observación)
   }
   wsData.push(headerRow);
 
@@ -222,12 +241,13 @@ export function exportAttendanceExcel(rows: Row[], keys: AttendanceKeys, schedul
   for (let i = 0; i < sortedDates.length; i++) {
     subRow.push({ v: 'Entrada', t: 's', s: SUB_HEADER_STYLE });
     subRow.push({ v: 'Salida', t: 's', s: SUB_HEADER_STYLE });
+    subRow.push({ v: 'Observación', t: 's', s: SUB_HEADER_STYLE });
   }
   wsData.push(subRow);
 
   // ── Data rows ──
 
-  for (const [, emp] of empMap) {
+  for (const [empKey, emp] of empMap) {
     const row: XLSX.CellObject[] = [];
     row.push(textCell(emp.team));
     row.push(plainCell(emp.userId));
@@ -254,9 +274,13 @@ export function exportAttendanceExcel(rows: Row[], keys: AttendanceKeys, schedul
     // Day columns — use date-specific schedule for late threshold
     for (const dk of sortedDates) {
       const dayData = emp.days.get(dk);
+      const entry = observations[`${empKey}|${dk}`];
+      const obs = entry?.text ?? '';
+      const omitLate = entry?.omitLate ?? false;
       if (!dayData) {
         row.push(plainCell(''));
         row.push(plainCell(''));
+        row.push(obs ? textCell(obs) : plainCell(''));
         continue;
       }
       const { entryLimit: dayEntryLimit } = getEmployeeLimits(schedules, empTeam, empId, dk);
@@ -271,6 +295,7 @@ export function exportAttendanceExcel(rows: Row[], keys: AttendanceKeys, schedul
         row.push(plainCell(''));
       }
       row.push(plainCell(sal12));
+      row.push(obs ? textCell(obs) : plainCell(''));
     }
 
     wsData.push(row);
@@ -286,11 +311,11 @@ export function exportAttendanceExcel(rows: Row[], keys: AttendanceKeys, schedul
     merges.push({ s: { r: 0, c }, e: { r: 1, c } });
   }
   // "Check-in time" header: merge 2 cols horizontally in row 0
-  merges.push({ s: { r: 0, c: FIXED_COLS }, e: { r: 0, c: FIXED_COLS + 1 } });
-  // Each date header: merge 2 cols horizontally in row 0
+  merges.push({ s: { r: 0, c: FIXED_COLS }, e: { r: 0, c: FIXED_COLS + CHECKIN_COLS - 1 } });
+  // Each date header: merge 3 cols horizontally in row 0
   for (let i = 0; i < sortedDates.length; i++) {
-    const startCol = FIXED_COLS + CHECKIN_COLS + i * 2;
-    merges.push({ s: { r: 0, c: startCol }, e: { r: 0, c: startCol + 1 } });
+    const startCol = FIXED_COLS + CHECKIN_COLS + i * 3;
+    merges.push({ s: { r: 0, c: startCol }, e: { r: 0, c: startCol + 2 } });
   }
   ws['!merges'] = merges;
 
@@ -304,6 +329,7 @@ export function exportAttendanceExcel(rows: Row[], keys: AttendanceKeys, schedul
   for (let i = 0; i < sortedDates.length; i++) {
     colWidths.push({ wch: 14 }); // Entrada
     colWidths.push({ wch: 14 }); // Salida
+    colWidths.push({ wch: 18 }); // Observación
   }
   ws['!cols'] = colWidths;
 

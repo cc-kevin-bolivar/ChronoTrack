@@ -1,3 +1,5 @@
+import { useTheme } from '../../context/ThemeContext';
+
 export type ViewType = 'dashboard' | 'list' | 'charts' | 'schedule';
 
 interface NavItem {
@@ -56,6 +58,7 @@ const navItems: NavItem[] = [
 
 export function Sidebar({ activeView, onChangeView, onReset, isAttendance }: Props) {
   const visibleItems = navItems.filter((item) => !item.attendanceOnly || isAttendance);
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <aside className="w-56 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col h-screen sticky top-0">

@@ -28,7 +28,9 @@ export function DepartmentDetail({ department, onBack }: Props) {
 
   const employees = useMemo(() => {
     if (!deptSchedule) return [];
-    return deptSchedule.employees;
+    return [...deptSchedule.employees].sort((a, b) =>
+      a.employeeName.localeCompare(b.employeeName, 'es-ES')
+    );
   }, [deptSchedule]);
 
   const handleDeptEntryChange = useCallback((value: string) => {
@@ -93,7 +95,7 @@ export function DepartmentDetail({ department, onBack }: Props) {
     return (
       <div className="text-center py-12 text-gray-500 dark:text-gray-400">
         <p className="text-sm">Departamento no encontrado</p>
-        <button onClick={onBack} className="mt-2 text-blue-600 text-sm hover:underline">Volver</button>
+        <button onClick={onBack} className="mt-2 text-blue-600 dark:text-blue-400 text-sm hover:underline">Volver</button>
       </div>
     );
   }

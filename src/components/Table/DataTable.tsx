@@ -1,4 +1,5 @@
 import { useDataState } from '../../context/DataContext';
+import { useObservations } from '../../context/ObservationContext';
 import { useScheduleState } from '../../context/ScheduleContext';
 import { useTableControls } from '../../hooks/useTableControls';
 import { exportAttendanceExcel } from '../../utils/excelExporter';
@@ -15,12 +16,12 @@ function formatCell(value: unknown): string {
 
 function getCellClass(value: unknown, colKey: string): string {
   if (colKey === 'Entrada Tardía' && typeof value === 'string') {
-    if (value.startsWith('Tarde')) return 'text-red-600 font-medium';
-    if (value === 'A tiempo') return 'text-green-600';
+    if (value.startsWith('Tarde')) return 'text-red-600 dark:text-red-400 font-medium';
+    if (value === 'A tiempo') return 'text-green-600 dark:text-green-400';
   }
   if (colKey === 'Salida Tardía' && typeof value === 'string') {
-    if (value.startsWith('Extra')) return 'text-amber-600 font-medium';
-    if (value === 'A tiempo') return 'text-green-600';
+    if (value.startsWith('Extra')) return 'text-amber-600 dark:text-amber-400 font-medium';
+    if (value === 'A tiempo') return 'text-green-600 dark:text-green-400';
   }
   return '';
 }
@@ -57,6 +58,7 @@ interface Props {
 
 export function DataTable({ onSelectEmployee, departmentFilter }: Props) {
   const { parsedData } = useDataState();
+  const { observations } = useObservations();
   const schedules = useScheduleState();
   if (!parsedData) return null;
 
@@ -122,7 +124,7 @@ export function DataTable({ onSelectEmployee, departmentFilter }: Props) {
             {(dateFrom || dateTo) && (
               <button
                 onClick={() => { setDateFrom(''); setDateTo(''); }}
-                className="text-xs text-blue-600 hover:text-blue-800"
+                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >
                 Limpiar
               </button>
@@ -157,6 +159,31 @@ export function DataTable({ onSelectEmployee, departmentFilter }: Props) {
         </div>
       </div>
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700 text-sm">
+          <span className="text-gray-500 dark:text-gray-400">
+            Página {page + 1} de {totalPages}
+          </span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => setPage(page - 1)}
+              disabled={page === 0}
+              className="px-3 py-1 rounded border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              Anterior
+            </button>
+            <button
+              onClick={() => setPage(page + 1)}
+              disabled={page >= totalPages - 1}
+              className="px-3 py-1 rounded border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-gray-900 dark:text-gray-200">
@@ -189,7 +216,7 @@ export function DataTable({ onSelectEmployee, departmentFilter }: Props) {
                   key={i}
                   className={`border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 ${canClick ? 'cursor-pointer' : ''}`}
                   onClick={() => {
-                    if (canClick) onSelectEmployee(String(row[empKey] ?? ''));
+                    if (canClick) onSelectEmployee(String(row[empKey] ?? '').trim());
                   }}
                 >
                   {columns.map((col) => (
@@ -237,7 +264,7 @@ export function DataTable({ onSelectEmployee, departmentFilter }: Props) {
     <button
       onClick={() => {
         if (isAttendance && attendanceKeys) {
-          exportAttendanceExcel(allRows, attendanceKeys, schedules);
+          exportAttendanceExcel(allRows, attendanceKeys, schedules, observations);
         }
       }}
       className="fixed bottom-6 right-6 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all z-50"

@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { useDataState } from '../../context/DataContext';
+import { useEffectiveRows } from '../../hooks/useEffectiveRows';
 import { BarChartView } from './BarChartView';
 import { LineChartView } from './LineChartView';
 import { PieChartView } from './PieChartView';
-import { ChartSelector } from './ChartSelector';
+import { LateVsOnTimeChart } from './LateVsOnTimeChart';
 import type { Row } from '../../types/data';
 
 function ChartByType({ type, rows, xKey, yKey, title }: { type: string; rows: Row[]; xKey: string; yKey: string; title: string }) {
@@ -18,13 +18,11 @@ function ChartByType({ type, rows, xKey, yKey, title }: { type: string; rows: Ro
 
 export function ChartPanel() {
   const { parsedData, chartSuggestions } = useDataState();
-  const [customChart, setCustomChart] = useState<{ type: 'bar' | 'line' | 'pie'; xKey: string; yKey: string } | null>(null);
+  const rows = useEffectiveRows();
 
   if (!parsedData || parsedData.columns.length < 2) return null;
 
-  const { rows, columns: allColumns } = parsedData;
-  // Hide internal columns from the custom chart selector
-  const columns = allColumns.filter((c) => !c.key.startsWith('_'));
+  const isAttendance = parsedData.isAttendance;
 
   return (
     <div>
