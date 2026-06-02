@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useDataState } from '../../context/DataContext';
+import { useEffectiveRows } from '../../hooks/useEffectiveRows';
 import { useScheduleState, minutesToTimeStr, DEFAULT_ENTRY, DEFAULT_EXIT } from '../../context/ScheduleContext';
 import { StatCard } from './StatCard';
 import { DepartmentCard, type DepartmentSummary } from './DepartmentCard';
@@ -10,6 +11,7 @@ interface Props {
 
 export function StatsSummary({ onSelectDepartment }: Props) {
   const { stats, attendanceSummaries, parsedData } = useDataState();
+  const effectiveRows = useEffectiveRows();
   const schedules = useScheduleState();
   const isAttendance = parsedData?.isAttendance ?? false;
 
@@ -25,7 +27,7 @@ export function StatsSummary({ onSelectDepartment }: Props) {
     // Group rows by department, then find unique employees and who was late
     const deptMap = new Map<string, { employees: Set<string>; lateEmployees: Set<string> }>();
 
-    for (const row of parsedData.rows) {
+    for (const row of effectiveRows) {
       const dept = String(row[departmentKey] ?? '').trim();
       const empId = String(row[empKey] ?? '').trim();
       if (!dept || !empId) continue;
@@ -52,7 +54,7 @@ export function StatsSummary({ onSelectDepartment }: Props) {
         schedule: `${entry} - ${exit}`,
       };
     }).sort((a, b) => a.department.localeCompare(b.department));
-  }, [isAttendance, parsedData, schedules]);
+  }, [isAttendance, parsedData, effectiveRows, schedules]);
 
   if (isAttendance && attendanceSummaries.length > 0) {
     const totalEmployees = attendanceSummaries.length;

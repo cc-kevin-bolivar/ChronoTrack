@@ -1,5 +1,5 @@
 import XLSX from 'xlsx-js-style';
-import type { Row, AttendanceKeys, ScheduleConfig } from '../types/data';
+import type { Row, AttendanceKeys, ScheduleConfig, ObservationEntry } from '../types/data';
 import { getEmployeeLimits, minutesToTimeStr } from '../context/ScheduleContext';
 
 /* ── helpers ─────────────────────────────────────────────── */
@@ -115,6 +115,19 @@ function redCell(value: string): XLSX.CellObject {
   };
 }
 
+/** Late arrival that has been excused via an observation: amber, not red. */
+function justifiedCell(value: string): XLSX.CellObject {
+  return {
+    v: value, t: 's',
+    s: {
+      font: { color: { rgb: '9C6500' }, sz: 10 },
+      fill: { fgColor: { rgb: 'FFEB9C' } },
+      alignment: { horizontal: 'center' },
+      border: CELL_BORDER,
+    },
+  };
+}
+
 function plainCell(value: string): XLSX.CellObject {
   return {
     v: value, t: 's',
@@ -146,7 +159,7 @@ export function exportAttendanceExcel(
   rows: Row[],
   keys: AttendanceKeys,
   schedules: ScheduleConfig = {},
-  observations: Record<string, string> = {},
+  observations: Record<string, ObservationEntry> = {},
 ): void {
   const {
     departmentKey,
@@ -255,7 +268,9 @@ export function exportAttendanceExcel(
     // Day columns — use employee's scheduled entry as late threshold
     for (const dk of sortedDates) {
       const dayData = emp.days.get(dk);
-      const obs = observations[`${empKey}|${dk}`] ?? '';
+      const entry = observations[`${empKey}|${dk}`];
+      const obs = entry?.text ?? '';
+      const omitLate = entry?.omitLate ?? false;
       if (!dayData) {
         row.push(plainCell(''));
         row.push(plainCell(''));
@@ -267,8 +282,13 @@ export function exportAttendanceExcel(
       const entMin = parseMinutes(dayData.entrada);
 
       if (ent12) {
-        row.push(entMin !== null && entMin <= entryLimit
-          ? greenCell(ent12) : redCell(ent12));
+        const isLate = entMin !== null && entMin > entryLimit;
+        if (!isLate) {
+          row.push(greenCell(ent12));
+        } else {
+          // Excused late arrivals are shown amber instead of red.
+          row.push(omitLate ? justifiedCell(ent12) : redCell(ent12));
+        }
       } else {
         row.push(plainCell(''));
       }

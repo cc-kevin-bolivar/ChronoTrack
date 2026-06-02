@@ -54,7 +54,7 @@ const PIE_COLORS = ['#10b981', '#ef4444']; // green, red
 
 export function EmployeeDetail({ employeeId, onBack }: Props) {
   const { parsedData } = useDataState();
-  const { getObservation, setObservation } = useObservations();
+  const { getObservation, getEntry, setObservation, omittedSet } = useObservations();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -86,13 +86,19 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
     const entries: number[] = [];
     const exits: number[] = [];
 
-    for (const row of empRows) {
+    for (let i = 0; i < empRows.length; i++) {
+      const row = empRows[i];
+      const dateVal = attendanceKeys.dateKey ? row[attendanceKeys.dateKey] : null;
+      const dateStr = normalizeDateKey(dateVal) ?? String(i);
+      const omitted = omittedSet.has(`${employeeId}|${dateStr}`);
+
       const entradaTardia = row['Entrada Tardía'];
-      if (typeof entradaTardia === 'string' && entradaTardia.startsWith('Tarde')) {
+      const isLate = typeof entradaTardia === 'string' && entradaTardia.startsWith('Tarde');
+      if (isLate && !omitted) {
         lateDays++;
+        const lateMins = row['_entradaTardeMin'];
+        if (typeof lateMins === 'number') totalLateMinutes += lateMins;
       }
-      const lateMins = row['_entradaTardeMin'];
-      if (typeof lateMins === 'number') totalLateMinutes += lateMins;
 
       const extraMins = row['_salidaTardeMin'];
       if (typeof extraMins === 'number') totalExtraMinutes += extraMins;
@@ -138,9 +144,9 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
       empRows,
       tableColumns,
     };
-  }, [parsedData, employeeId]);
+  }, [parsedData, employeeId, omittedSet]);
 
-  const [modalInfo, setModalInfo] = useState<{ dateKey: string; dateLabel: string } | null>(null);
+  const [modalInfo, setModalInfo] = useState<{ dateKey: string; dateLabel: string; isLate: boolean } | null>(null);
 
   if (!data) {
     return (
@@ -269,19 +275,35 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
                 const dateStr = normalizeDateKey(dateVal) ?? String(i);
                 const dateLabel = dateVal instanceof Date ? dateVal.toLocaleDateString('es-ES') : String(dateVal ?? '');
                 const obs = getObservation(employeeId, dateStr);
+                const entradaTardia = row['Entrada Tardía'];
+                const isLate = typeof entradaTardia === 'string' && entradaTardia.startsWith('Tarde');
+                const omitted = isLate && omittedSet.has(`${employeeId}|${dateStr}`);
                 return (
                   <tr key={i} className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
-                    {data.tableColumns.map((col) => (
-                      <td
-                        key={col}
-                        className={`px-4 py-2.5 whitespace-nowrap ${getCellClass(row[col], col)}`}
-                      >
-                        {formatCell(row[col])}
-                      </td>
-                    ))}
+                    {data.tableColumns.map((col) => {
+                      if (col === 'Entrada Tardía' && omitted) {
+                        return (
+                          <td
+                            key={col}
+                            className="px-4 py-2.5 whitespace-nowrap text-amber-600 dark:text-amber-400 font-medium"
+                            title={`${formatCell(row[col])} (justificada)`}
+                          >
+                            Justificada
+                          </td>
+                        );
+                      }
+                      return (
+                        <td
+                          key={col}
+                          className={`px-4 py-2.5 whitespace-nowrap ${getCellClass(row[col], col)}`}
+                        >
+                          {formatCell(row[col])}
+                        </td>
+                      );
+                    })}
                     <td className="px-4 py-2.5">
                       <button
-                        onClick={() => setModalInfo({ dateKey: dateStr, dateLabel })}
+                        onClick={() => setModalInfo({ dateKey: dateStr, dateLabel, isLate })}
                         className="group flex items-center gap-1.5 min-w-[140px] text-left"
                         title={obs ? 'Editar observación' : 'Agregar observación'}
                       >
@@ -311,9 +333,11 @@ export function EmployeeDetail({ employeeId, onBack }: Props) {
         <ObservationModal
           employeeName={data.employeeName}
           dateLabel={modalInfo.dateLabel}
+          isLate={modalInfo.isLate}
           value={getObservation(employeeId, modalInfo.dateKey)}
-          onSave={(text) => {
-            setObservation(employeeId, modalInfo.dateKey, text);
+          initialOmitLate={getEntry(employeeId, modalInfo.dateKey).omitLate}
+          onSave={(text, omitLate) => {
+            setObservation(employeeId, modalInfo.dateKey, text, omitLate);
             setModalInfo(null);
           }}
           onClose={() => setModalInfo(null)}
@@ -347,17 +371,22 @@ function InfoRow({ label, value, valueClass }: { label: string; value: string; v
 function ObservationModal({
   employeeName,
   dateLabel,
+  isLate,
   value,
+  initialOmitLate,
   onSave,
   onClose,
 }: {
   employeeName: string;
   dateLabel: string;
+  isLate: boolean;
   value: string;
-  onSave: (text: string) => void;
+  initialOmitLate: boolean;
+  onSave: (text: string, omitLate: boolean) => void;
   onClose: () => void;
 }) {
   const [draft, setDraft] = useState(value);
+  const [omitLate, setOmitLate] = useState(initialOmitLate);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -406,13 +435,31 @@ function ObservationModal({
             rows={4}
             className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 resize-none"
           />
+
+          {/* Omitir llegada tarde — solo si este registro llegó tarde */}
+          {isLate && (
+            <label className="flex items-start gap-2.5 mt-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={omitLate}
+                onChange={(e) => setOmitLate(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-400 cursor-pointer"
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Omitir esta llegada tarde
+                <span className="block text-xs text-gray-400 dark:text-gray-500">
+                  No se contará como tarde en las estadísticas ni se marcará en rojo al exportar.
+                </span>
+              </span>
+            </label>
+          )}
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-gray-100 dark:border-gray-700">
-          {value && (
+          {(value || initialOmitLate) && (
             <button
-              onClick={() => onSave('')}
+              onClick={() => onSave('', false)}
               className="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors mr-auto"
             >
               Eliminar
@@ -425,7 +472,7 @@ function ObservationModal({
             Cancelar
           </button>
           <button
-            onClick={() => onSave(draft)}
+            onClick={() => onSave(draft, isLate ? omitLate : false)}
             className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
           >
             Guardar
