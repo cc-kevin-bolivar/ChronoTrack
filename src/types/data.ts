@@ -22,6 +22,12 @@ export interface ColumnStats {
 
 export type Row = Record<string, string | number | Date | null>;
 
+export interface ObservationEntry {
+  text: string;
+  /** When true, a late arrival on this record is excused (not counted as late). */
+  omitLate: boolean;
+}
+
 export interface AttendanceKeys {
   departmentKey?: string;
   userIdKey?: string;
@@ -58,11 +64,20 @@ export interface ChartSuggestion {
   title: string;
 }
 
+export interface ScheduleRange {
+  id: string;           // identificador único
+  startDate: string;    // "YYYY-MM-DD"
+  endDate: string;      // "YYYY-MM-DD"
+  entryTime: number;    // minutos desde medianoche
+  exitTime: number;     // minutos desde medianoche
+}
+
 export interface EmployeeSchedule {
   employeeId: string;
   employeeName: string;
   entryTime: number | null;  // minutos desde medianoche, null = usa default del depto
   exitTime: number | null;
+  scheduleRanges: ScheduleRange[];
 }
 
 export interface DepartmentSchedule {

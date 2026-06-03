@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useDataState } from '../../context/DataContext';
+import { useEffectiveRows } from '../../hooks/useEffectiveRows';
 import { useScheduleState, minutesToTimeStr, DEFAULT_ENTRY, DEFAULT_EXIT } from '../../context/ScheduleContext';
 import { StatCard } from './StatCard';
 import { DepartmentCard, type DepartmentSummary } from './DepartmentCard';
@@ -10,6 +11,7 @@ interface Props {
 
 export function StatsSummary({ onSelectDepartment }: Props) {
   const { stats, attendanceSummaries, parsedData } = useDataState();
+  const effectiveRows = useEffectiveRows();
   const schedules = useScheduleState();
   const isAttendance = parsedData?.isAttendance ?? false;
 
@@ -25,7 +27,7 @@ export function StatsSummary({ onSelectDepartment }: Props) {
     // Group rows by department, then find unique employees and who was late
     const deptMap = new Map<string, { employees: Set<string>; lateEmployees: Set<string> }>();
 
-    for (const row of parsedData.rows) {
+    for (const row of effectiveRows) {
       const dept = String(row[departmentKey] ?? '').trim();
       const empId = String(row[empKey] ?? '').trim();
       if (!dept || !empId) continue;
@@ -52,7 +54,7 @@ export function StatsSummary({ onSelectDepartment }: Props) {
         schedule: `${entry} - ${exit}`,
       };
     }).sort((a, b) => a.department.localeCompare(b.department));
-  }, [isAttendance, parsedData, schedules]);
+  }, [isAttendance, parsedData, effectiveRows, schedules]);
 
   if (isAttendance && attendanceSummaries.length > 0) {
     const totalEmployees = attendanceSummaries.length;
@@ -64,26 +66,26 @@ export function StatsSummary({ onSelectDepartment }: Props) {
       <div className="space-y-4">
         {/* Global metrics */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
             <p className="text-2xl font-bold text-blue-600">{totalEmployees}</p>
-            <p className="text-sm text-gray-500">Colaboradores</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Colaboradores</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
             <p className="text-2xl font-bold text-purple-600">{totalDepartments}</p>
-            <p className="text-sm text-gray-500">Departamentos</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Departamentos</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
             <p className="text-2xl font-bold text-red-600">{totalLateEmployees}</p>
-            <p className="text-sm text-gray-500">Llegaron tarde</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Llegaron tarde</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
             <p className="text-2xl font-bold text-green-600">{totalRecords}</p>
-            <p className="text-sm text-gray-500">Registros</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Registros</p>
           </div>
         </div>
 
         {/* Per-department cards */}
-        <h2 className="text-lg font-semibold text-gray-800">Resumen por Departamento</h2>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Resumen por Departamento</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {departmentSummaries.map((s, i) => (
             <DepartmentCard
@@ -103,7 +105,7 @@ export function StatsSummary({ onSelectDepartment }: Props) {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold text-gray-800 mb-3">Resumen Estadístico</h2>
+      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">Resumen Estadístico</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {stats.map((stat) => (
           <StatCard key={stat.key} stat={stat} />

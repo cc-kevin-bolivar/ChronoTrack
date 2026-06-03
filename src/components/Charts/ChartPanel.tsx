@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useDataState } from '../../context/DataContext';
+import { useEffectiveRows } from '../../hooks/useEffectiveRows';
 import { BarChartView } from './BarChartView';
 import { LineChartView } from './LineChartView';
 import { PieChartView } from './PieChartView';
+import { LateVsOnTimeChart } from './LateVsOnTimeChart';
 import { ChartSelector } from './ChartSelector';
 import type { Row } from '../../types/data';
 
@@ -18,18 +20,19 @@ function ChartByType({ type, rows, xKey, yKey, title }: { type: string; rows: Ro
 
 export function ChartPanel() {
   const { parsedData, chartSuggestions } = useDataState();
+  const rows = useEffectiveRows();
   const [customChart, setCustomChart] = useState<{ type: 'bar' | 'line' | 'pie'; xKey: string; yKey: string } | null>(null);
 
   if (!parsedData || parsedData.columns.length < 2) return null;
 
-  const { rows, columns: allColumns } = parsedData;
-  // Hide internal columns from the custom chart selector
-  const columns = allColumns.filter((c) => !c.key.startsWith('_'));
+  const isAttendance = parsedData.isAttendance;
+  // Hide internal columns (prefixed with "_") from the custom chart selector
+  const columns = parsedData.columns.filter((c) => !c.key.startsWith('_'));
 
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-gray-800">Gráficos</h2>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Gráficos</h2>
       </div>
 
       {/* Auto-suggested charts */}
@@ -41,10 +44,17 @@ export function ChartPanel() {
         </div>
       )}
 
+      {/* Late vs On-time chart (attendance mode only) */}
+      {isAttendance && (
+        <div className="mb-6">
+          <LateVsOnTimeChart rows={rows} />
+        </div>
+      )}
+
       {/* Custom chart */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-gray-600">Gráfico personalizado</h3>
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Gráfico personalizado</h3>
           <ChartSelector
             columns={columns}
             chartType={customChart?.type ?? 'bar'}
